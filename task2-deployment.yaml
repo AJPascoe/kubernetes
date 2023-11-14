@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mytriotaskflaskapp
+  labels:
+    app: mytriotaskflaskapp
+spec:
+  selector:
+    matchLabels:
+      app: mytriotaskflaskapp
+  strategy:
+    rollingUpdate: 
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        app: mytriotaskflaskapp
+    spec:
+      containers:
+      - name: mytriotaskflaskapp
+        image: chrisreeves1/mytriotaskflaskapp:2.0 
+        ports:
+          - containerPort: 5000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mytriotaskflaskapp
+spec:
+  selector:
+    app: mytriotaskflaskapp
+  type: LoadBalancer
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 5000
+
+---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: nginx
+#   labels:
+#     app: nginx
+# spec:
+#   selector:
+#     matchLabels:
+#       app: nginx
+#   strategy:
+#     rollingUpdate: 
+#       maxSurge: 25%
+#       maxUnavailable: 25%
+#   template:
+#     metadata:
+#       labels:
+#         app: nginx
+#     spec:
+#       containers:
+#       - name: nginx
+#         image: nginx:alpine
+
+
+
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: nginx
+# spec:
+#   selector:
+#     app: nginx
+#   type: LoadBalancer
+#   ports:
+#     - name: http
+#       protocol: TCP
+#       port: 80
+#       targetPort: 5000
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mytriotasksql
+  labels:
+    app: mytriotasksql
+spec:
+  selector:
+    matchLabels:
+      app: mytriotasksql
+  template:
+    metadata:
+      labels:
+        app: mytriotasksql
+    spec:
+      containers:
+      - name: mytriotasksql
+        image: chrisreeves1/mytriotasksql
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: my-secret
+                key: mysql-password
+          - name: MYSQL_DATABASE
+            value: mydatabase
+          - name: PASSWORD
+            value: flask-db
+        ports: 
+        - containerPort: 3306
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mytriotasksql
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3306
+      targetPort: 3306
+      protocol: TCP
+  selector:
+    app: mytriotasksql
